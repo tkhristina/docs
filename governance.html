@@ -1,0 +1,1385 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Governance contracts &mdash; Lotto Finance  documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="_static/lotto-v2-hardhat/docs/source/extraStyles.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="Lotto Finance" href="index.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="index.html" class="icon icon-home"> Lotto Finance
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Governance contracts</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#governance">Governance</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#executor">Executor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#proposalvalidator">ProposalValidator</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#governancestrategy">GovernanceStrategy</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Lotto Finance</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+      <li>Governance contracts</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/governance.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="governance-contracts">
+<h1>Governance contracts<a class="headerlink" href="#governance-contracts" title="Permalink to this headline"></a></h1>
+<p>The documentation that describe contract core of governance mechanisme.</p>
+<blockquote>
+<div><a class="reference internal image-reference" href="_images/inherit.jpg"><img alt="Governance inheritance graph" src="_images/inherit.jpg" style="width: 1200px;" /></a>
+</div></blockquote>
+<section id="governance">
+<h2>Governance<a class="headerlink" href="#governance" title="Permalink to this headline"></a></h2>
+<dl class="sol contract">
+<dt class="sig sig-object sol">
+<em><span class="pre">contract</span> </em><span class="sig-name descname"><span class="pre">Governance</span></span> <span class="pre">is</span> <span class="pre">Ownable,</span> <span class="pre">IGovernance</span></dt>
+<dd><p>Main point of interaction with Lotto governance</p>
+<ul class="simple">
+<li><p>Create a Proposal</p></li>
+<li><p>Cancel a Proposal</p></li>
+<li><p>Queue a Proposal</p></li>
+<li><p>Execute a Proposal</p></li>
+<li><p>Submit Vote to a Proposal</p></li>
+</ul>
+<p>Available Proposal States : Pending =&gt; Active =&gt; Succeeded(/Failed) =&gt; Queued =&gt; Executed(/Expired).
+The transition  “Canceled” can appear while the State is not set as Executed/Expired</p>
+<ol class="arabic simple">
+<li><p>When the Proposal is created it has Pending state</p></li>
+<li><p>After is the time exeed the votingDelay value Proposal become Active so available for voting</p></li>
+<li><p>When the voting period is finished Proposal become or Succeeded or Failed. It depends on if the voteDifference was achived or not</p></li>
+<li><p>If the proposal passed it should be Queued and give Queued state</p></li>
+<li><p>After the proposal was queued there is delay beetween queue and execute. After the delay was expired transaction can be executed and give the state Executed</p></li>
+<li><p>If the executionPeriod was passed and transaction was not executed it recieve Expired state and can’t be executed anymore</p></li>
+</ol>
+<dl class="field-list simple">
+<dt class="field-odd">Title</dt>
+<dd class="field-odd"><p>Governance contract</p>
+</dd>
+</dl>
+<dl class="sol statevar">
+<dt class="sig sig-object sol">
+<span class="pre">address</span> <em><span class="pre">private</span> </em><span class="sig-name descname"><span class="pre">_governanceStrategy</span></span></dt>
+<dd></dd></dl>
+
+<dl class="sol statevar">
+<dt class="sig sig-object sol">
+<span class="pre">uint256</span> <em><span class="pre">private</span> </em><span class="sig-name descname"><span class="pre">_votingDelay</span></span></dt>
+<dd></dd></dl>
+
+<dl class="sol statevar">
+<dt class="sig sig-object sol">
+<span class="pre">uint256</span> <em><span class="pre">private</span> </em><span class="sig-name descname"><span class="pre">_proposalsCount</span></span></dt>
+<dd></dd></dl>
+
+<dl class="sol statevar">
+<dt class="sig sig-object sol">
+<span class="pre">mapping</span> <span class="pre">(uint256</span> <span class="pre">=&gt;</span> <span class="pre">Proposal)</span> <em><span class="pre">private</span> </em><span class="sig-name descname"><span class="pre">_proposals</span></span></dt>
+<dd></dd></dl>
+
+<dl class="sol statevar">
+<dt class="sig sig-object sol">
+<span class="pre">mapping</span> <span class="pre">(address</span> <span class="pre">=&gt;</span> <span class="pre">bool)</span> <em><span class="pre">private</span> </em><span class="sig-name descname"><span class="pre">_authorizedExecutors</span></span></dt>
+<dd></dd></dl>
+
+<dl class="sol statevar">
+<dt class="sig sig-object sol">
+<span class="pre">address</span> <em><span class="pre">private</span> </em><span class="sig-name descname"><span class="pre">_guardian</span></span></dt>
+<dd></dd></dl>
+
+<dl class="sol modifier">
+<dt class="sig sig-object sol">
+<em><span class="pre">modifier</span> </em><span class="sig-name descname"><span class="pre">onlyGuardian</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><br /></dt>
+<dd></dd></dl>
+
+<dl class="sol constructor">
+<dt class="sig sig-object sol">
+<span class="sig-name descname"><span class="pre">constructor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">address</span> <span class="pre">governanceStrategy</span></em>, <em class="sig-param"><span class="pre">uint256</span> <span class="pre">votingDelay</span></em>, <em class="sig-param"><span class="pre">address</span> <span class="pre">guardian</span></em>, <em class="sig-param"><span class="pre">address[]</span> <span class="pre">memory</span> <span class="pre">executors</span></em><span class="sig-paren">)</span><br /></dt>
+<dd><p>Constructor - set initial parameters</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>governanceStrategy</strong> – The whitelisted strategy to calculate voting power</p></li>
+<li><p><strong>votingDelay</strong> – delay before voting will be unlocked and proposal state changed from Pending ro Active</p></li>
+<li><p><strong>guardian</strong> – the address of guardian who will be able to cancel proposal</p></li>
+<li><p><strong>executors</strong> – list of executors</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="sol function">
+<dt class="sig sig-object sol">
+<em><span class="pre">function</span> </em><span class="sig-name descname"><span class="pre">createProposal</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">IExecutor</span> <span class="pre">executor</span></em>, <em class="sig-param"><span class="pre">address[]</span> <span class="pre">memory</span> <span class="pre">targets</span></em>, <em class="sig-param"><span class="pre">uint256[]</span> <span class="pre">memory</span> <span class="pre">values</span></em>, <em class="sig-param"><span class="pre">string[]</span> <span class="pre">memory</span> <span class="pre">signatures</span></em>, <em class="sig-param"><span class="pre">bytes[]</span> <span class="pre">memory</span> <span class="pre">calldatas</span></em>, <em class="sig-param"><span class="pre">bytes32</span> <span class="pre">ipfsHash</span></em><span class="sig-paren">)</span><br /> <em><span class="pre">external</span></em><br /> <span class="pre">override</span><br /> <em><span class="pre">returns</span> </em><span class="sig-paren">(</span><em class="sig-param"><span class="pre">uint256</span></em><span class="sig-paren">)</span><br /></dt>
+<dd><p>Creates a Proposal (needs Voting Power of creator &gt; Threshold)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>executor</strong> – The Executor contract that will execute the proposal</p></li>
+<li><p><strong>targets</strong> – list of contracts called by proposal’s associated transactions</p></li>
+<li><p><strong>values</strong> – list of value in wei for each propoposal’s associated transaction</p></li>
+<li><p><strong>signatures</strong> – list of function signatures (can be empty) to be used when created the callData</p></li>
+<li><p><strong>calldatas</strong> – list of calldatas: if associated signature empty, calldata ready, else calldata is arguments</p></li>
+<li><p><strong>ipfsHash</strong> – IPFS hash of the proposal</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="sol function">
+<dt class="sig sig-object sol">
+<em><span class="pre">function</span> </em><span class="sig-name descname"><span class="pre">cancelProposal</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">uint256</span> <span class="pre">proposalId</span></em><span class="sig-paren">)</span><br /> <em><span class="pre">external</span></em><br /> <span class="pre">override</span><br /></dt>
+<dd><p>Cancels a Proposal.
+- Callable by the _guardian with relaxed conditions, or by anybody if the conditions of
+cancellation on the executor are fulfilled, hence is the creator will not hold the proposionThreshold on his wallet</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>proposalId</strong> – id of the proposal</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="sol function">
+<dt class="sig sig-object sol">
+<em><span class="pre">function</span> </em><span class="sig-name descname"><span class="pre">queueProposal</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">uint256</span> <span class="pre">proposalId</span></em><span class="sig-paren">)</span><br /> <em><span class="pre">external</span></em><br /> <span class="pre">override</span><br /></dt>
+<dd><p>Queue the proposal (If Proposal Succeeded)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>proposalId</strong> – id of the proposal to queue</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="sol function">
+<dt class="sig sig-object sol">
+<em><span class="pre">function</span> </em><span class="sig-name descname"><span class="pre">executeProposal</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">uint256</span> <span class="pre">proposalId</span></em><span class="sig-paren">)</span><br /> <em><span class="pre">external</span></em><br /> <em><span class="pre">payable</span></em><br /> <span class="pre">override</span><br /></dt>
+<dd><p>Execute the proposal (If Proposal Queued)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>proposalId</strong> – id of the proposal to execute</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="sol function">
+<dt class="sig sig-object sol">
+<em><span class="pre">function</span> </em><span class="sig-name descname"><span class="pre">submitVote</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">uint256</span> <span class="pre">proposalId</span></em>, <em class="sig-param"><span class="pre">bool</span> <span class="pre">support</span></em><span class="sig-paren">)</span><br /> <em><span class="pre">external</span></em><br /> <span class="pre">override</span><br /></dt>
+<dd><p>Function allowing msg.sender to vote for/against a proposal</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>proposalId</strong> – id of the proposal</p></li>
+<li><p><strong>support</strong> – boolean, true = vote for, false = vote against</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="sol function">
+<dt class="sig sig-object sol">
+<em><span class="pre">function</span> </em><span class="sig-name descname"><span class="pre">setGovernanceStrategy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">address</span> <span class="pre">governanceStrategy</span></em><span class="sig-paren">)</span><br /> <em><span class="pre">external</span></em><br /> <span class="pre">override</span><br /> <span class="pre">onlyOwner</span><br /></dt>
+<dd><p>Set new GovernanceStrategy, allowed to call by onlyOwner</p>
+<dl class="field-list simple">
+<dt class="field-odd">Notice</dt>
+<dd class="field-odd"><p>owner should be a executor, so needs to make a proposal</p>
+</dd>
+<dt class="field-even">Parameters</dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>governanceStrategy</strong> – new Address of the GovernanceStrategy contract</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="sol function">
+<dt class="sig sig-object sol">
+<em><span class="pre">function</span> </em><span class="sig-name descname"><span class="pre">setVotingDelay</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">uint256</span> <span class="pre">votingDelay</span></em><span class="sig-paren">)</span><br /> <em><span class="pre">external</span></em><br /> <span class="pre">override</span><br /> <span class="pre">onlyOwner</span><br /></dt>
+<dd><p>Set new Voting Delay (delay before a newly created proposal can be voted on), allowed to call by onlyOwner</p>
+<dl class="field-list simple">
+<dt class="field-odd">Notice</dt>
+<dd class="field-odd"><p>owner should be a executor, so needs to make a proposal</p>
+</dd>
+<dt class="field-even">Parameters</dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>votingDelay</strong> – new voting delay in terms of blocks</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="sol function">
+<dt class="sig sig-object sol">
+<em><span class="pre">function</span> </em><span class="sig-name descname"><span class="pre">authorizeExecutors</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">address[]</span> <span class="pre">memory</span> <span class="pre">executors</span></em><span class="sig-paren">)</span><br /> <em><span class="pre">public</span></em><br /> <span class="pre">override</span><br /> <span class="pre">onlyOwner</span><br /></dt>
+<dd><p>Add new addresses to the list of authorized executors, allowed to call by onlyOwner</p>
+<dl class="field-list simple">
+<dt class="field-odd">Notice</dt>
+<dd class="field-odd"><p>owner should be a executor, so needs to make a proposal</p>
+</dd>
+<dt class="field-even">Parameters</dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>executors</strong> – list of new addresses to be authorized executors</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="sol function">
+<dt class="sig sig-object sol">
+<em><span class="pre">function</span> </em><span class="sig-name descname"><span class="pre">unauthorizeExecutors</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">address[]</span> <span class="pre">memory</span> <span class="pre">executors</span></em><span class="sig-paren">)</span><br /> <em><span class="pre">public</span></em><br /> <span class="pre">override</span><br /> <span class="pre">onlyOwner</span><br /></dt>
+<dd><p>Remove addresses from the list of authorized executors</p>
+<dl class="field-list simple">
+<dt class="field-odd">Notice</dt>
+<dd class="field-odd"><p>owner should be a executor, so needs to make a proposal</p>
+</dd>
+<dt class="field-even">Parameters</dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>executors</strong> – list of addresses to be removed as authorized executors</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="sol function">
+<dt class="sig sig-object sol">
+<em><span class="pre">function</span> </em><span class="sig-name descname"><span class="pre">__abdicate</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><br /> <em><span class="pre">external</span></em><br /> <span class="pre">override</span><br /> <span class="pre">onlyGuardian</span><br /></dt>
+<dd><p>Let the guardian abdicate from its priviledged rights. Set address of _guardian as zero address</p>
+<dl class="field-list simple">
+<dt class="field-odd">Notice</dt>
+<dd class="field-odd"><p>can be called only by _guardian</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="sol function">
+<dt class="sig sig-object sol">
+<em><span class="pre">function</span> </em><span class="sig-name descname"><span class="pre">getGovernanceStrategy</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><br /> <em><span class="pre">external</span></em><br /> <em><span class="pre">view</span></em><br /> <span class="pre">override</span><br /> <em><span class="pre">returns</span> </em><span class="sig-paren">(</span><em class="sig-param"><span class="pre">address</span></em><span class="sig-paren">)</span><br /></dt>
+<dd><p>Getter of the current GovernanceStrategy address</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return</dt>
+<dd class="field-odd"><p>The address of the current GovernanceStrategy contract</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="sol function">
+<dt class="sig sig-object sol">
+<em><span class="pre">function</span> </em><span class="sig-name descname"><span class="pre">getVotingDelay</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><br /> <em><span class="pre">external</span></em><br /> <em><span class="pre">view</span></em><br /> <span class="pre">override</span><br /> <em><span class="pre">returns</span> </em><span class="sig-paren">(</span><em class="sig-param"><span class="pre">uint256</span></em><span class="sig-paren">)</span><br /></dt>
+<dd><p>Getter of the current Voting Delay (delay before a created proposal can be voted on)
+Different from the voting duration</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return</dt>
+<dd class="field-odd"><p>The voting delay in seconds</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="sol function">
+<dt class="sig sig-object sol">
+<em><span class="pre">function</span> </em><span class="sig-name descname"><span class="pre">isExecutorAuthorized</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">address</span> <span class="pre">executor</span></em><span class="sig-paren">)</span><br /> <em><span class="pre">public</span></em><br /> <em><span class="pre">view</span></em><br /> <span class="pre">override</span><br /> <em><span class="pre">returns</span> </em><span class="sig-paren">(</span><em class="sig-param"><span class="pre">bool</span></em><span class="sig-paren">)</span><br /></dt>
+<dd><p>Returns whether an address is an authorized executor</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>executor</strong> – address to evaluate as authorized executor</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return</dt>
+<dd class="field-even"><p>true - if authorized, false - is not authorized</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="sol function">
+<dt class="sig sig-object sol">
+<em><span class="pre">function</span> </em><span class="sig-name descname"><span class="pre">getGuardian</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><br /> <em><span class="pre">external</span></em><br /> <em><span class="pre">view</span></em><br /> <span class="pre">override</span><br /> <em><span class="pre">returns</span> </em><span class="sig-paren">(</span><em class="sig-param"><span class="pre">address</span></em><span class="sig-paren">)</span><br /></dt>
+<dd><p>Getter the address of the guardian, that can mainly cancel proposals</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return</dt>
+<dd class="field-odd"><p>The address of the guardian</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="sol function">
+<dt class="sig sig-object sol">
+<em><span class="pre">function</span> </em><span class="sig-name descname"><span class="pre">getProposalsCount</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><br /> <em><span class="pre">external</span></em><br /> <em><span class="pre">view</span></em><br /> <span class="pre">override</span><br /> <em><span class="pre">returns</span> </em><span class="sig-paren">(</span><em class="sig-param"><span class="pre">uint256</span></em><span class="sig-paren">)</span><br /></dt>
+<dd><p>Getter of the proposal count (the current number of proposals ever created)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return</dt>
+<dd class="field-odd"><p>the proposal count</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="sol function">
+<dt class="sig sig-object sol">
+<em><span class="pre">function</span> </em><span class="sig-name descname"><span class="pre">getProposalById</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">uint256</span> <span class="pre">proposalId</span></em><span class="sig-paren">)</span><br /> <em><span class="pre">external</span></em><br /> <em><span class="pre">view</span></em><br /> <span class="pre">override</span><br /> <em><span class="pre">returns</span> </em><span class="sig-paren">(</span><em class="sig-param"><span class="pre">ProposalWithoutVotes</span> <span class="pre">memory</span></em><span class="sig-paren">)</span><br /></dt>
+<dd><p>Getter of a proposal by id</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>proposalId</strong> – id of the proposal to get</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return</dt>
+<dd class="field-even"><p>the proposal as struct ProposalWithoutVotes</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="sol function">
+<dt class="sig sig-object sol">
+<em><span class="pre">function</span> </em><span class="sig-name descname"><span class="pre">getVoteOnProposal</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">uint256</span> <span class="pre">proposalId</span></em>, <em class="sig-param"><span class="pre">address</span> <span class="pre">voter</span></em><span class="sig-paren">)</span><br /> <em><span class="pre">external</span></em><br /> <em><span class="pre">view</span></em><br /> <span class="pre">override</span><br /> <em><span class="pre">returns</span> </em><span class="sig-paren">(</span><em class="sig-param"><span class="pre">Vote</span> <span class="pre">memory</span></em><span class="sig-paren">)</span><br /></dt>
+<dd><p>Getter of the Vote of a voter about a proposal</p>
+<dl class="field-list simple">
+<dt class="field-odd">Notice</dt>
+<dd class="field-odd"><p>Vote is a struct: ({bool support, uint248 votingPower})</p>
+</dd>
+<dt class="field-even">Parameters</dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>proposalId</strong> – id of the proposal</p></li>
+<li><p><strong>voter</strong> – address of the voter</p></li>
+</ul>
+</dd>
+<dt class="field-odd">Return</dt>
+<dd class="field-odd"><p>The associated Vote memory object</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="sol function">
+<dt class="sig sig-object sol">
+<em><span class="pre">function</span> </em><span class="sig-name descname"><span class="pre">getProposalState</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">uint256</span> <span class="pre">proposalId</span></em><span class="sig-paren">)</span><br /> <em><span class="pre">public</span></em><br /> <em><span class="pre">view</span></em><br /> <span class="pre">override</span><br /> <em><span class="pre">returns</span> </em><span class="sig-paren">(</span><em class="sig-param"><span class="pre">ProposalState</span></em><span class="sig-paren">)</span><br /></dt>
+<dd><p>Get the current state of a proposal</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>proposalId</strong> – id of the proposal</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return</dt>
+<dd class="field-even"><p>The current state of the proposal</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="sol function">
+<dt class="sig sig-object sol">
+<em><span class="pre">function</span> </em><span class="sig-name descname"><span class="pre">_queueOrRevert</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">IExecutor</span> <span class="pre">executor</span></em>, <em class="sig-param"><span class="pre">address</span> <span class="pre">target</span></em>, <em class="sig-param"><span class="pre">uint256</span> <span class="pre">value</span></em>, <em class="sig-param"><span class="pre">string</span> <span class="pre">memory</span> <span class="pre">signature</span></em>, <em class="sig-param"><span class="pre">bytes</span> <span class="pre">memory</span> <span class="pre">callData</span></em>, <em class="sig-param"><span class="pre">uint256</span> <span class="pre">executionTime</span></em><span class="sig-paren">)</span><br /> <em><span class="pre">internal</span></em><br /></dt>
+<dd></dd></dl>
+
+<dl class="sol function">
+<dt class="sig sig-object sol">
+<em><span class="pre">function</span> </em><span class="sig-name descname"><span class="pre">_submitVote</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">address</span> <span class="pre">voter</span></em>, <em class="sig-param"><span class="pre">uint256</span> <span class="pre">proposalId</span></em>, <em class="sig-param"><span class="pre">bool</span> <span class="pre">support</span></em><span class="sig-paren">)</span><br /> <em><span class="pre">internal</span></em><br /></dt>
+<dd></dd></dl>
+
+<dl class="sol function">
+<dt class="sig sig-object sol">
+<em><span class="pre">function</span> </em><span class="sig-name descname"><span class="pre">_setGovernanceStrategy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">address</span> <span class="pre">governanceStrategy</span></em><span class="sig-paren">)</span><br /> <em><span class="pre">internal</span></em><br /></dt>
+<dd></dd></dl>
+
+<dl class="sol function">
+<dt class="sig sig-object sol">
+<em><span class="pre">function</span> </em><span class="sig-name descname"><span class="pre">_setVotingDelay</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">uint256</span> <span class="pre">votingDelay</span></em><span class="sig-paren">)</span><br /> <em><span class="pre">internal</span></em><br /></dt>
+<dd></dd></dl>
+
+<dl class="sol function">
+<dt class="sig sig-object sol">
+<em><span class="pre">function</span> </em><span class="sig-name descname"><span class="pre">_authorizeExecutor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">address</span> <span class="pre">executor</span></em><span class="sig-paren">)</span><br /> <em><span class="pre">internal</span></em><br /></dt>
+<dd></dd></dl>
+
+<dl class="sol function">
+<dt class="sig sig-object sol">
+<em><span class="pre">function</span> </em><span class="sig-name descname"><span class="pre">_unauthorizeExecutor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">address</span> <span class="pre">executor</span></em><span class="sig-paren">)</span><br /> <em><span class="pre">internal</span></em><br /></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="sol interface">
+<dt class="sig sig-object sol">
+<em><span class="pre">interface</span> </em><span class="sig-name descname"><span class="pre">IGovernance</span></span></dt>
+<dd><dl class="sol event">
+<dt class="sig sig-object sol">
+<em><span class="pre">event</span> </em><span class="sig-name descname"><span class="pre">ProposalCreated</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">uint256</span> <span class="pre">id</span></em>, <em class="sig-param"><span class="pre">address</span> <span class="pre">indexed</span> <span class="pre">creator</span></em>, <em class="sig-param"><span class="pre">IExecutor</span> <span class="pre">indexed</span> <span class="pre">executor</span></em>, <em class="sig-param"><span class="pre">address[]</span> <span class="pre">targets</span></em>, <em class="sig-param"><span class="pre">uint256[]</span> <span class="pre">values</span></em>, <em class="sig-param"><span class="pre">string[]</span> <span class="pre">signatures</span></em>, <em class="sig-param"><span class="pre">bytes[]</span> <span class="pre">calldatas</span></em>, <em class="sig-param"><span class="pre">uint256</span> <span class="pre">startTimestamp</span></em>, <em class="sig-param"><span class="pre">uint256</span> <span class="pre">endTimestamp</span></em>, <em class="sig-param"><span class="pre">address</span> <span class="pre">strategy</span></em>, <em class="sig-param"><span class="pre">bytes32</span> <span class="pre">ipfsHash</span></em><span class="sig-paren">)</span><br /></dt>
+<dd><p>emitted when a new proposal is created</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>id</strong> – Id of the proposal</p></li>
+<li><p><strong>creator</strong> – address of the creator</p></li>
+<li><p><strong>executor</strong> – The ExecutorWithTimelock contract that will execute the proposal</p></li>
+<li><p><strong>targets</strong> – list of contracts called by proposal’s associated transactions</p></li>
+<li><p><strong>values</strong> – list of value in wei for each propoposal’s associated transaction</p></li>
+<li><p><strong>signatures</strong> – list of function signatures (can be empty) to be used when created the callData</p></li>
+<li><p><strong>calldatas</strong> – list of calldatas: if associated signature empty, calldata ready, else calldata is arguments</p></li>
+<li><p><strong>startTimestamp</strong> – block number when vote starts</p></li>
+<li><p><strong>endTimestamp</strong> – block number when vote ends</p></li>
+<li><p><strong>strategy</strong> – address of the governanceStrategy contract</p></li>
+<li><p><strong>ipfsHash</strong> – IPFS hash of the proposal</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="sol event">
+<dt class="sig sig-object sol">
+<em><span class="pre">event</span> </em><span class="sig-name descname"><span class="pre">ProposalCanceled</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">uint256</span> <span class="pre">id</span></em><span class="sig-paren">)</span><br /></dt>
+<dd><p>emitted when a proposal is canceled</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>id</strong> – Id of the proposal</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="sol event">
+<dt class="sig sig-object sol">
+<em><span class="pre">event</span> </em><span class="sig-name descname"><span class="pre">ProposalQueued</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">uint256</span> <span class="pre">id</span></em>, <em class="sig-param"><span class="pre">uint256</span> <span class="pre">executionTime</span></em>, <em class="sig-param"><span class="pre">address</span> <span class="pre">indexed</span> <span class="pre">initiatorQueueing</span></em><span class="sig-paren">)</span><br /></dt>
+<dd><p>emitted when a proposal is queued</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>id</strong> – Id of the proposal</p></li>
+<li><p><strong>executionTime</strong> – time when proposal underlying transactions can be executed</p></li>
+<li><p><strong>initiatorQueueing</strong> – address of the initiator of the queuing transaction</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="sol event">
+<dt class="sig sig-object sol">
+<em><span class="pre">event</span> </em><span class="sig-name descname"><span class="pre">ProposalExecuted</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">uint256</span> <span class="pre">id</span></em>, <em class="sig-param"><span class="pre">address</span> <span class="pre">indexed</span> <span class="pre">initiatorExecution</span></em><span class="sig-paren">)</span><br /></dt>
+<dd><p>emitted when a proposal is executed</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>id</strong> – Id of the proposal</p></li>
+<li><p><strong>initiatorExecution</strong> – address of the initiator of the execution transaction</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="sol event">
+<dt class="sig sig-object sol">
+<em><span class="pre">event</span> </em><span class="sig-name descname"><span class="pre">VoteEmitted</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">uint256</span> <span class="pre">id</span></em>, <em class="sig-param"><span class="pre">address</span> <span class="pre">indexed</span> <span class="pre">voter</span></em>, <em class="sig-param"><span class="pre">bool</span> <span class="pre">support</span></em>, <em class="sig-param"><span class="pre">uint256</span> <span class="pre">votingPower</span></em><span class="sig-paren">)</span><br /></dt>
+<dd><p>emitted when a vote is registered</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>id</strong> – Id of the proposal</p></li>
+<li><p><strong>voter</strong> – address of the voter</p></li>
+<li><p><strong>support</strong> – boolean, true = vote for, false = vote against</p></li>
+<li><p><strong>votingPower</strong> – Power of the voter/vote</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="sol event">
+<dt class="sig sig-object sol">
+<em><span class="pre">event</span> </em><span class="sig-name descname"><span class="pre">GovernanceStrategyChanged</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">address</span> <span class="pre">indexed</span> <span class="pre">newStrategy</span></em>, <em class="sig-param"><span class="pre">address</span> <span class="pre">indexed</span> <span class="pre">initiatorChange</span></em><span class="sig-paren">)</span><br /></dt>
+<dd><p>emitted when a new governance strategy set</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>newStrategy</strong> – address of new strategy</p></li>
+<li><p><strong>initiatorChange</strong> – msg.sender address</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="sol event">
+<dt class="sig sig-object sol">
+<em><span class="pre">event</span> </em><span class="sig-name descname"><span class="pre">VotingDelayChanged</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">uint256</span> <span class="pre">newVotingDelay</span></em>, <em class="sig-param"><span class="pre">address</span> <span class="pre">indexed</span> <span class="pre">initiatorChange</span></em><span class="sig-paren">)</span><br /></dt>
+<dd><p>emitted when a votingDelay is changed</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>newVotingDelay</strong> – new voting delay in seconds</p></li>
+<li><p><strong>initiatorChange</strong> – msg.sender address</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="sol event">
+<dt class="sig sig-object sol">
+<em><span class="pre">event</span> </em><span class="sig-name descname"><span class="pre">ExecutorAuthorized</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">address</span> <span class="pre">executor</span></em><span class="sig-paren">)</span><br /></dt>
+<dd><p>emitted when a executor is authorized</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>executor</strong> – new address of executor</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="sol event">
+<dt class="sig sig-object sol">
+<em><span class="pre">event</span> </em><span class="sig-name descname"><span class="pre">ExecutorUnauthorized</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">address</span> <span class="pre">executor</span></em><span class="sig-paren">)</span><br /></dt>
+<dd><p>emitted when a executor is unauthorized</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>executor</strong> – address of executor</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="executor">
+<h2>Executor<a class="headerlink" href="#executor" title="Permalink to this headline"></a></h2>
+<dl class="sol contract">
+<dt class="sig sig-object sol">
+<em><span class="pre">contract</span> </em><span class="sig-name descname"><span class="pre">Executor</span></span> <span class="pre">is</span> <span class="pre">ProposalValidator,</span> <span class="pre">IExecutor</span></dt>
+<dd><p>Contract:</p>
+<ul class="simple">
+<li><p>Validate Proposal creations/ cancellation</p></li>
+<li><p>Validate Vote Quorum and Vote success on proposal</p></li>
+<li><p>Queue, Execute, Cancel, successful proposals’ transactions.</p></li>
+</ul>
+<dl class="field-list simple">
+<dt class="field-odd">Title</dt>
+<dd class="field-odd"><p>Executor and Validator Contract</p>
+</dd>
+</dl>
+<dl class="sol statevar">
+<dt class="sig sig-object sol">
+<span class="pre">address</span> <em><span class="pre">private</span> </em><span class="sig-name descname"><span class="pre">_admin</span></span></dt>
+<dd></dd></dl>
+
+<dl class="sol statevar">
+<dt class="sig sig-object sol">
+<span class="pre">address</span> <em><span class="pre">private</span> </em><span class="sig-name descname"><span class="pre">_pendingAdmin</span></span></dt>
+<dd></dd></dl>
+
+<dl class="sol statevar">
+<dt class="sig sig-object sol">
+<span class="pre">uint256</span> <em><span class="pre">private</span> </em><span class="sig-name descname"><span class="pre">_delay</span></span></dt>
+<dd></dd></dl>
+
+<dl class="sol statevar">
+<dt class="sig sig-object sol">
+<span class="pre">mapping</span> <span class="pre">(bytes32</span> <span class="pre">=&gt;</span> <span class="pre">bool)</span> <em><span class="pre">private</span> </em><span class="sig-name descname"><span class="pre">_queuedTransactions</span></span></dt>
+<dd></dd></dl>
+
+<dl class="sol constructor">
+<dt class="sig sig-object sol">
+<span class="sig-name descname"><span class="pre">constructor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">address</span> <span class="pre">admin</span></em>, <em class="sig-param"><span class="pre">uint256</span> <span class="pre">delay</span></em>, <em class="sig-param"><span class="pre">uint256</span> <span class="pre">_executionPeriod</span></em>, <em class="sig-param"><span class="pre">uint256</span> <span class="pre">_minimumDelay</span></em>, <em class="sig-param"><span class="pre">uint256</span> <span class="pre">_maximumDelay</span></em>, <em class="sig-param"><span class="pre">uint256</span> <span class="pre">propositionThreshold</span></em>, <em class="sig-param"><span class="pre">uint256</span> <span class="pre">voteDuration</span></em>, <em class="sig-param"><span class="pre">uint256</span> <span class="pre">voteDifferential</span></em>, <em class="sig-param"><span class="pre">uint256</span> <span class="pre">minimumQuorum</span></em><span class="sig-paren">)</span><br /> <span class="pre">ProposalValidator</span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">propositionThreshold</span></em>, <em class="sig-param"><span class="pre">voteDuration</span></em>, <em class="sig-param"><span class="pre">voteDifferential</span></em>, <em class="sig-param"><span class="pre">minimumQuorum</span></em><span class="sig-paren">)</span><br /></dt>
+<dd><p>Constructor</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>admin</strong> – admin address, that can call the main functions, (should be Governance contract)</p></li>
+<li><p><strong>delay</strong> – minimum time between queueing and execution of proposal</p></li>
+<li><p><strong>_executionPeriod</strong> – time after <cite>delay</cite> while a proposal can be executed</p></li>
+<li><p><strong>_minimumDelay</strong> – lower threshold of <cite>delay</cite>, in seconds</p></li>
+<li><p><strong>_maximumDelay</strong> – upper threhold of <cite>delay</cite>, in seconds</p></li>
+<li><p><strong>propositionThreshold</strong> – minimum percentage of supply needed to submit a proposal</p></li>
+<li><p><strong>voteDuration</strong> – duration in seconds of the voting period</p></li>
+<li><p><strong>voteDifferential</strong> – percentage of supply that <cite>for</cite> votes need to be over <cite>against</cite>
+in order for the proposal to pass</p></li>
+<li><p><strong>minimumQuorum</strong> – minimum percentage of the supply in FOR-voting-power need for a proposal to pass</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="sol modifier">
+<dt class="sig sig-object sol">
+<em><span class="pre">modifier</span> </em><span class="sig-name descname"><span class="pre">onlyAdmin</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><br /></dt>
+<dd></dd></dl>
+
+<dl class="sol modifier">
+<dt class="sig sig-object sol">
+<em><span class="pre">modifier</span> </em><span class="sig-name descname"><span class="pre">onlyExecutor</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><br /></dt>
+<dd></dd></dl>
+
+<dl class="sol modifier">
+<dt class="sig sig-object sol">
+<em><span class="pre">modifier</span> </em><span class="sig-name descname"><span class="pre">onlyPendingAdmin</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><br /></dt>
+<dd></dd></dl>
+
+<dl class="sol function">
+<dt class="sig sig-object sol">
+<em><span class="pre">function</span> </em><span class="sig-name descname"><span class="pre">setDelay</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">uint256</span> <span class="pre">delay</span></em><span class="sig-paren">)</span><br /> <em><span class="pre">public</span></em><br /> <span class="pre">onlyExecutor</span><br /></dt>
+<dd><p>Set the delay</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>delay</strong> – delay between queue and execution of proposal</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="sol function">
+<dt class="sig sig-object sol">
+<em><span class="pre">function</span> </em><span class="sig-name descname"><span class="pre">acceptAdmin</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><br /> <em><span class="pre">public</span></em><br /> <span class="pre">onlyPendingAdmin</span><br /></dt>
+<dd><p>Function enabling pending admin to become admin
+Can only be called by pending admin</p>
+</dd></dl>
+
+<dl class="sol function">
+<dt class="sig sig-object sol">
+<em><span class="pre">function</span> </em><span class="sig-name descname"><span class="pre">setPendingAdmin</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">address</span> <span class="pre">newPendingAdmin</span></em><span class="sig-paren">)</span><br /> <em><span class="pre">public</span></em><br /> <span class="pre">onlyExecutor</span><br /></dt>
+<dd><p>Setting a new pending admin (that can then become admin)
+Can only be called by this executor (i.e via proposal)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>newPendingAdmin</strong> – address of the new admin</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="sol function">
+<dt class="sig sig-object sol">
+<em><span class="pre">function</span> </em><span class="sig-name descname"><span class="pre">setMinimumQuorum</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">uint256</span> <span class="pre">_minimumQuorum</span></em><span class="sig-paren">)</span><br /> <em><span class="pre">public</span></em><br /> <span class="pre">onlyExecutor</span><br /></dt>
+<dd><p>Set minimumQuorum</p>
+<dl class="field-list simple">
+<dt class="field-odd">Notice</dt>
+<dd class="field-odd"><p>can be changed only via proposal</p>
+</dd>
+<dt class="field-even">Parameters</dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>_minimumQuorum</strong> – percentage of min quorum need to proposal passed</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="sol function">
+<dt class="sig sig-object sol">
+<em><span class="pre">function</span> </em><span class="sig-name descname"><span class="pre">setVoteDifferential</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">uint256</span> <span class="pre">_voteDifferential</span></em><span class="sig-paren">)</span><br /> <em><span class="pre">public</span></em><br /> <span class="pre">onlyExecutor</span><br /></dt>
+<dd><p>Set voteDifferential</p>
+<dl class="field-list simple">
+<dt class="field-odd">Notice</dt>
+<dd class="field-odd"><p>can be changed only via proposal</p>
+</dd>
+<dt class="field-even">Parameters</dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>_voteDifferential</strong> – percentage of differential of votes between for and against votes</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="sol function">
+<dt class="sig sig-object sol">
+<em><span class="pre">function</span> </em><span class="sig-name descname"><span class="pre">setVotingDuration</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">uint256</span> <span class="pre">_votingDuration</span></em><span class="sig-paren">)</span><br /> <em><span class="pre">public</span></em><br /> <span class="pre">onlyExecutor</span><br /></dt>
+<dd><p>Set votingDuration</p>
+<dl class="field-list simple">
+<dt class="field-odd">Notice</dt>
+<dd class="field-odd"><p>can be changed only via proposal</p>
+</dd>
+<dt class="field-even">Parameters</dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>_votingDuration</strong> – time in seconds of voting period</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="sol function">
+<dt class="sig sig-object sol">
+<em><span class="pre">function</span> </em><span class="sig-name descname"><span class="pre">queueTransaction</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">address</span> <span class="pre">target</span></em>, <em class="sig-param"><span class="pre">uint256</span> <span class="pre">value</span></em>, <em class="sig-param"><span class="pre">string</span> <span class="pre">memory</span> <span class="pre">signature</span></em>, <em class="sig-param"><span class="pre">bytes</span> <span class="pre">memory</span> <span class="pre">data</span></em>, <em class="sig-param"><span class="pre">uint256</span> <span class="pre">executionTime</span></em><span class="sig-paren">)</span><br /> <em><span class="pre">public</span></em><br /> <span class="pre">override</span><br /> <span class="pre">onlyAdmin</span><br /> <em><span class="pre">returns</span> </em><span class="sig-paren">(</span><em class="sig-param"><span class="pre">bytes32</span></em><span class="sig-paren">)</span><br /></dt>
+<dd><p>Function, called by Governance, that queue a transaction, returns action hash</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>target</strong> – smart contract target</p></li>
+<li><p><strong>value</strong> – wei value of the transaction</p></li>
+<li><p><strong>signature</strong> – function signature of the transaction</p></li>
+<li><p><strong>data</strong> – function arguments of the transaction or callData if signature empty</p></li>
+<li><p><strong>executionTime</strong> – time at which to execute the transaction</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return</dt>
+<dd class="field-even"><p>the action Hash</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="sol function">
+<dt class="sig sig-object sol">
+<em><span class="pre">function</span> </em><span class="sig-name descname"><span class="pre">cancelTransaction</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">address</span> <span class="pre">target</span></em>, <em class="sig-param"><span class="pre">uint256</span> <span class="pre">value</span></em>, <em class="sig-param"><span class="pre">string</span> <span class="pre">memory</span> <span class="pre">signature</span></em>, <em class="sig-param"><span class="pre">bytes</span> <span class="pre">memory</span> <span class="pre">data</span></em>, <em class="sig-param"><span class="pre">uint256</span> <span class="pre">executionTime</span></em><span class="sig-paren">)</span><br /> <em><span class="pre">public</span></em><br /> <span class="pre">override</span><br /> <span class="pre">onlyAdmin</span><br /> <em><span class="pre">returns</span> </em><span class="sig-paren">(</span><em class="sig-param"><span class="pre">bytes32</span></em><span class="sig-paren">)</span><br /></dt>
+<dd><p>Function, called by Governance, that cancels a transaction, returns action hash</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>target</strong> – smart contract target</p></li>
+<li><p><strong>value</strong> – wei value of the transaction</p></li>
+<li><p><strong>signature</strong> – function signature of the transaction</p></li>
+<li><p><strong>data</strong> – function arguments of the transaction or callData if signature empty</p></li>
+<li><p><strong>executionTime</strong> – time at which to execute the transaction</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return</dt>
+<dd class="field-even"><p>the action Hash of the canceled tx</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="sol function">
+<dt class="sig sig-object sol">
+<em><span class="pre">function</span> </em><span class="sig-name descname"><span class="pre">executeTransaction</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">address</span> <span class="pre">target</span></em>, <em class="sig-param"><span class="pre">uint256</span> <span class="pre">value</span></em>, <em class="sig-param"><span class="pre">string</span> <span class="pre">memory</span> <span class="pre">signature</span></em>, <em class="sig-param"><span class="pre">bytes</span> <span class="pre">memory</span> <span class="pre">data</span></em>, <em class="sig-param"><span class="pre">uint256</span> <span class="pre">executionTime</span></em><span class="sig-paren">)</span><br /> <em><span class="pre">public</span></em><br /> <em><span class="pre">payable</span></em><br /> <span class="pre">override</span><br /> <span class="pre">onlyAdmin</span><br /> <em><span class="pre">returns</span> </em><span class="sig-paren">(</span><em class="sig-param"><span class="pre">bytes</span> <span class="pre">memory</span></em><span class="sig-paren">)</span><br /></dt>
+<dd><p>Function, called by Governance, that cancels a transaction, returns the callData executed</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>target</strong> – smart contract target</p></li>
+<li><p><strong>value</strong> – wei value of the transaction</p></li>
+<li><p><strong>signature</strong> – function signature of the transaction</p></li>
+<li><p><strong>data</strong> – function arguments of the transaction or callData if signature empty</p></li>
+<li><p><strong>executionTime</strong> – time at which to execute the transaction</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return</dt>
+<dd class="field-even"><p>the callData executed as memory bytes</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="sol function">
+<dt class="sig sig-object sol">
+<em><span class="pre">function</span> </em><span class="sig-name descname"><span class="pre">getAdmin</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><br /> <em><span class="pre">external</span></em><br /> <em><span class="pre">view</span></em><br /> <span class="pre">override</span><br /> <em><span class="pre">returns</span> </em><span class="sig-paren">(</span><em class="sig-param"><span class="pre">address</span></em><span class="sig-paren">)</span><br /></dt>
+<dd><p>Getter of the current admin address (should be governance)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return</dt>
+<dd class="field-odd"><p>The address of the current admin</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="sol function">
+<dt class="sig sig-object sol">
+<em><span class="pre">function</span> </em><span class="sig-name descname"><span class="pre">getPendingAdmin</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><br /> <em><span class="pre">external</span></em><br /> <em><span class="pre">view</span></em><br /> <span class="pre">override</span><br /> <em><span class="pre">returns</span> </em><span class="sig-paren">(</span><em class="sig-param"><span class="pre">address</span></em><span class="sig-paren">)</span><br /></dt>
+<dd><p>Getter of the current pending admin address</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return</dt>
+<dd class="field-odd"><p>The address of the pending admin</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="sol function">
+<dt class="sig sig-object sol">
+<em><span class="pre">function</span> </em><span class="sig-name descname"><span class="pre">getDelay</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><br /> <em><span class="pre">external</span></em><br /> <em><span class="pre">view</span></em><br /> <span class="pre">override</span><br /> <em><span class="pre">returns</span> </em><span class="sig-paren">(</span><em class="sig-param"><span class="pre">uint256</span></em><span class="sig-paren">)</span><br /></dt>
+<dd><p>Getter of the delay between queuing and execution</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return</dt>
+<dd class="field-odd"><p>The delay in seconds</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="sol function">
+<dt class="sig sig-object sol">
+<em><span class="pre">function</span> </em><span class="sig-name descname"><span class="pre">isActionQueued</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">bytes32</span> <span class="pre">actionHash</span></em><span class="sig-paren">)</span><br /> <em><span class="pre">external</span></em><br /> <em><span class="pre">view</span></em><br /> <span class="pre">override</span><br /> <em><span class="pre">returns</span> </em><span class="sig-paren">(</span><em class="sig-param"><span class="pre">bool</span></em><span class="sig-paren">)</span><br /></dt>
+<dd><p>Returns whether an action (via actionHash) is queued</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>actionHash</strong> – hash of the action to be checked
+keccak256(abi.encode(target, value, signature, data, executionTime))</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return</dt>
+<dd class="field-even"><p>true if underlying action of actionHash is queued</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="sol function">
+<dt class="sig sig-object sol">
+<em><span class="pre">function</span> </em><span class="sig-name descname"><span class="pre">isProposalOverExecutionPeriod</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">IGovernance</span> <span class="pre">governance</span></em>, <em class="sig-param"><span class="pre">uint256</span> <span class="pre">proposalId</span></em><span class="sig-paren">)</span><br /> <em><span class="pre">external</span></em><br /> <em><span class="pre">view</span></em><br /> <span class="pre">override</span><br /> <em><span class="pre">returns</span> </em><span class="sig-paren">(</span><em class="sig-param"><span class="pre">bool</span></em><span class="sig-paren">)</span><br /></dt>
+<dd><p>Checks whether a proposal is over its execution period</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>governance</strong> – Governance contract</p></li>
+<li><p><strong>proposalId</strong> – Id of the proposal against which to test</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return</dt>
+<dd class="field-even"><p>true of proposal is over execution period</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="sol function">
+<dt class="sig sig-object sol">
+<em><span class="pre">function</span> </em><span class="sig-name descname"><span class="pre">_validateDelay</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">uint256</span> <span class="pre">delay</span></em><span class="sig-paren">)</span><br /> <em><span class="pre">internal</span></em><br /> <em><span class="pre">view</span></em><br /></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="sol interface">
+<dt class="sig sig-object sol">
+<em><span class="pre">interface</span> </em><span class="sig-name descname"><span class="pre">IExecutor</span></span></dt>
+<dd><dl class="sol event">
+<dt class="sig sig-object sol">
+<em><span class="pre">event</span> </em><span class="sig-name descname"><span class="pre">NewPendingAdmin</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">address</span> <span class="pre">newPendingAdmin</span></em><span class="sig-paren">)</span><br /></dt>
+<dd><p>emitted when a new pending admin is set</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>newPendingAdmin</strong> – address of the new pending admin</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="sol event">
+<dt class="sig sig-object sol">
+<em><span class="pre">event</span> </em><span class="sig-name descname"><span class="pre">NewGameAdded</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">string</span> <span class="pre">name</span></em>, <em class="sig-param"><span class="pre">address</span> <span class="pre">addressOfNewGame</span></em><span class="sig-paren">)</span><br /></dt>
+<dd></dd></dl>
+
+<dl class="sol event">
+<dt class="sig sig-object sol">
+<em><span class="pre">event</span> </em><span class="sig-name descname"><span class="pre">NewAdmin</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">address</span> <span class="pre">newAdmin</span></em><span class="sig-paren">)</span><br /></dt>
+<dd><p>emitted when a new admin is set</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>newAdmin</strong> – address of the new admin</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="sol event">
+<dt class="sig sig-object sol">
+<em><span class="pre">event</span> </em><span class="sig-name descname"><span class="pre">NewDelay</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">uint256</span> <span class="pre">delay</span></em><span class="sig-paren">)</span><br /></dt>
+<dd><p>emitted when a new delay (between queueing and execution) is set</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>delay</strong> – new delay</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="sol event">
+<dt class="sig sig-object sol">
+<em><span class="pre">event</span> </em><span class="sig-name descname"><span class="pre">QueuedAction</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">bytes32</span> <span class="pre">actionHash</span></em>, <em class="sig-param"><span class="pre">address</span> <span class="pre">indexed</span> <span class="pre">target</span></em>, <em class="sig-param"><span class="pre">uint256</span> <span class="pre">value</span></em>, <em class="sig-param"><span class="pre">string</span> <span class="pre">signature</span></em>, <em class="sig-param"><span class="pre">bytes</span> <span class="pre">data</span></em>, <em class="sig-param"><span class="pre">uint256</span> <span class="pre">executionTime</span></em><span class="sig-paren">)</span><br /></dt>
+<dd><p>emitted when a new (trans)action is Queued.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>actionHash</strong> – hash of the action</p></li>
+<li><p><strong>target</strong> – address of the targeted contract</p></li>
+<li><p><strong>value</strong> – wei value of the transaction</p></li>
+<li><p><strong>signature</strong> – function signature of the transaction</p></li>
+<li><p><strong>data</strong> – function arguments of the transaction or callData if signature empty</p></li>
+<li><p><strong>executionTime</strong> – time at which to execute the transaction</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="sol event">
+<dt class="sig sig-object sol">
+<em><span class="pre">event</span> </em><span class="sig-name descname"><span class="pre">CancelledAction</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">bytes32</span> <span class="pre">actionHash</span></em>, <em class="sig-param"><span class="pre">address</span> <span class="pre">indexed</span> <span class="pre">target</span></em>, <em class="sig-param"><span class="pre">uint256</span> <span class="pre">value</span></em>, <em class="sig-param"><span class="pre">string</span> <span class="pre">signature</span></em>, <em class="sig-param"><span class="pre">bytes</span> <span class="pre">data</span></em>, <em class="sig-param"><span class="pre">uint256</span> <span class="pre">executionTime</span></em><span class="sig-paren">)</span><br /></dt>
+<dd><p>emitted when an action is Cancelled</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>actionHash</strong> – hash of the action</p></li>
+<li><p><strong>target</strong> – address of the targeted contract</p></li>
+<li><p><strong>value</strong> – wei value of the transaction</p></li>
+<li><p><strong>signature</strong> – function signature of the transaction</p></li>
+<li><p><strong>data</strong> – function arguments of the transaction or callData if signature empty</p></li>
+<li><p><strong>executionTime</strong> – time at which to execute the transaction</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="sol event">
+<dt class="sig sig-object sol">
+<em><span class="pre">event</span> </em><span class="sig-name descname"><span class="pre">ExecutedAction</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">bytes32</span> <span class="pre">actionHash</span></em>, <em class="sig-param"><span class="pre">address</span> <span class="pre">indexed</span> <span class="pre">target</span></em>, <em class="sig-param"><span class="pre">uint256</span> <span class="pre">value</span></em>, <em class="sig-param"><span class="pre">string</span> <span class="pre">signature</span></em>, <em class="sig-param"><span class="pre">bytes</span> <span class="pre">data</span></em>, <em class="sig-param"><span class="pre">uint256</span> <span class="pre">executionTime</span></em>, <em class="sig-param"><span class="pre">bytes</span> <span class="pre">resultData</span></em><span class="sig-paren">)</span><br /></dt>
+<dd><p>emitted when an action is Cancelled</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>actionHash</strong> – hash of the action</p></li>
+<li><p><strong>target</strong> – address of the targeted contract</p></li>
+<li><p><strong>value</strong> – wei value of the transaction</p></li>
+<li><p><strong>signature</strong> – function signature of the transaction</p></li>
+<li><p><strong>data</strong> – function arguments of the transaction or callData if signature empty</p></li>
+<li><p><strong>executionTime</strong> – time at which to execute the transaction</p></li>
+<li><p><strong>resultData</strong> – the actual callData used on the target</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="sol function">
+<dt class="sig sig-object sol">
+<em><span class="pre">function</span> </em><span class="sig-name descname"><span class="pre">executionPeriod</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><br /> <em><span class="pre">external</span></em><br /> <em><span class="pre">view</span></em><br /> <em><span class="pre">returns</span> </em><span class="sig-paren">(</span><em class="sig-param"><span class="pre">uint256</span></em><span class="sig-paren">)</span><br /></dt>
+<dd><p>Getter of execution period constant</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return</dt>
+<dd class="field-odd"><p>grace period in seconds</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="sol function">
+<dt class="sig sig-object sol">
+<em><span class="pre">function</span> </em><span class="sig-name descname"><span class="pre">minimumDelay</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><br /> <em><span class="pre">external</span></em><br /> <em><span class="pre">view</span></em><br /> <em><span class="pre">returns</span> </em><span class="sig-paren">(</span><em class="sig-param"><span class="pre">uint256</span></em><span class="sig-paren">)</span><br /></dt>
+<dd><p>Getter of minimum delay constant</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return</dt>
+<dd class="field-odd"><p>minimum delay in seconds</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="sol function">
+<dt class="sig sig-object sol">
+<em><span class="pre">function</span> </em><span class="sig-name descname"><span class="pre">maximumDelay</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><br /> <em><span class="pre">external</span></em><br /> <em><span class="pre">view</span></em><br /> <em><span class="pre">returns</span> </em><span class="sig-paren">(</span><em class="sig-param"><span class="pre">uint256</span></em><span class="sig-paren">)</span><br /></dt>
+<dd><p>Getter of maximum delay constant</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return</dt>
+<dd class="field-odd"><p>maximum delay in seconds</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="proposalvalidator">
+<h2>ProposalValidator<a class="headerlink" href="#proposalvalidator" title="Permalink to this headline"></a></h2>
+<dl class="sol contract">
+<dt class="sig sig-object sol">
+<em><span class="pre">contract</span> </em><span class="sig-name descname"><span class="pre">ProposalValidator</span></span> <span class="pre">is</span> <span class="pre">IProposalValidator</span></dt>
+<dd><p>Validates/Invalidations propositions state modifications.
+Proposition Power functions: Validates proposition creations/ cancellation
+Voting Power functions: Validates success of propositions.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Title</dt>
+<dd class="field-odd"><p>Proposal Validator Contract, inherited by  Governance Executors</p>
+</dd>
+</dl>
+<dl class="sol statevar">
+<dt class="sig sig-object sol">
+<span class="pre">uint256</span> <em><span class="pre">public</span> </em><span class="sig-name descname"><span class="pre">propositionThreshold</span></span></dt>
+<dd><p>propositionThreshold</p>
+</dd></dl>
+
+<dl class="sol statevar">
+<dt class="sig sig-object sol">
+<span class="pre">uint256</span> <em><span class="pre">public</span> </em><span class="sig-name descname"><span class="pre">votingDuration</span></span></dt>
+<dd><p>votingDuration</p>
+</dd></dl>
+
+<dl class="sol statevar">
+<dt class="sig sig-object sol">
+<span class="pre">uint256</span> <em><span class="pre">public</span> </em><span class="sig-name descname"><span class="pre">voteDifferential</span></span></dt>
+<dd><p>voteDifferential</p>
+</dd></dl>
+
+<dl class="sol statevar">
+<dt class="sig sig-object sol">
+<span class="pre">uint256</span> <em><span class="pre">public</span> </em><span class="sig-name descname"><span class="pre">minimumQuorum</span></span></dt>
+<dd><p>minimumQuorum</p>
+</dd></dl>
+
+<dl class="sol statevar">
+<dt class="sig sig-object sol">
+<span class="pre">uint256</span> <span class="pre">public</span> <span class="pre">constant</span> <span class="sig-name descname"><span class="pre">ONE_HUNDRED_WITH_PRECISION</span></span></dt>
+<dd><p>ONE_HUNDRED_WITH_PRECISION</p>
+</dd></dl>
+
+<dl class="sol constructor">
+<dt class="sig sig-object sol">
+<span class="sig-name descname"><span class="pre">constructor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">uint256</span> <span class="pre">_propositionThreshold</span></em>, <em class="sig-param"><span class="pre">uint256</span> <span class="pre">_votingDuration</span></em>, <em class="sig-param"><span class="pre">uint256</span> <span class="pre">_voteDifferential</span></em>, <em class="sig-param"><span class="pre">uint256</span> <span class="pre">_minimumQuorum</span></em><span class="sig-paren">)</span><br /></dt>
+<dd><p>Constructor</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>_propositionThreshold</strong> – minimum percentage of supply needed to submit a proposal
+- In ONE_HUNDRED_WITH_PRECISION units</p></li>
+<li><p><strong>_votingDuration</strong> – duration in seconds of the voting period</p></li>
+<li><p><strong>_voteDifferential</strong> – percentage of supply that <cite>for</cite> votes need to be over <cite>against</cite>
+in order for the proposal to pass
+- In ONE_HUNDRED_WITH_PRECISION units</p></li>
+<li><p><strong>_minimumQuorum</strong> – minimum percentage of the supply in FOR-voting-power need for a proposal to pass
+- In ONE_HUNDRED_WITH_PRECISION units</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="sol function">
+<dt class="sig sig-object sol">
+<em><span class="pre">function</span> </em><span class="sig-name descname"><span class="pre">validateCreatorOfProposal</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">IGovernance</span> <span class="pre">governance</span></em>, <em class="sig-param"><span class="pre">address</span> <span class="pre">user</span></em><span class="sig-paren">)</span><br /> <em><span class="pre">external</span></em><br /> <em><span class="pre">view</span></em><br /> <span class="pre">override</span><br /> <em><span class="pre">returns</span> </em><span class="sig-paren">(</span><em class="sig-param"><span class="pre">bool</span></em><span class="sig-paren">)</span><br /></dt>
+<dd><p>Called to validate a proposal (e.g when creating new proposal in Governance)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>governance</strong> – Governance Contract</p></li>
+<li><p><strong>user</strong> – Address of the proposal creator</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return</dt>
+<dd class="field-even"><p>boolean, true if can be created</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="sol function">
+<dt class="sig sig-object sol">
+<em><span class="pre">function</span> </em><span class="sig-name descname"><span class="pre">validateProposalCancellation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">IGovernance</span> <span class="pre">governance</span></em>, <em class="sig-param"><span class="pre">address</span> <span class="pre">user</span></em><span class="sig-paren">)</span><br /> <em><span class="pre">external</span></em><br /> <em><span class="pre">view</span></em><br /> <span class="pre">override</span><br /> <em><span class="pre">returns</span> </em><span class="sig-paren">(</span><em class="sig-param"><span class="pre">bool</span></em><span class="sig-paren">)</span><br /></dt>
+<dd><p>Called to validate the cancellation of a proposal
+Needs to creator to have lost proposition power threashold</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>governance</strong> – Governance Contract</p></li>
+<li><p><strong>user</strong> – Address of the proposal creator</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return</dt>
+<dd class="field-even"><p>boolean, true if can be cancelled</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="sol function">
+<dt class="sig sig-object sol">
+<em><span class="pre">function</span> </em><span class="sig-name descname"><span class="pre">isPropositionPowerEnough</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">IGovernance</span> <span class="pre">governance</span></em>, <em class="sig-param"><span class="pre">address</span> <span class="pre">user</span></em><span class="sig-paren">)</span><br /> <em><span class="pre">public</span></em><br /> <em><span class="pre">view</span></em><br /> <span class="pre">override</span><br /> <em><span class="pre">returns</span> </em><span class="sig-paren">(</span><em class="sig-param"><span class="pre">bool</span></em><span class="sig-paren">)</span><br /></dt>
+<dd><p>Returns whether a user has enough Proposition Power to make a proposal.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>governance</strong> – Governance Contract</p></li>
+<li><p><strong>user</strong> – Address of the user to be challenged.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return</dt>
+<dd class="field-even"><p>true if user has enough power</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="sol function">
+<dt class="sig sig-object sol">
+<em><span class="pre">function</span> </em><span class="sig-name descname"><span class="pre">getMinimumPropositionPowerNeeded</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">IGovernance</span> <span class="pre">governance</span></em><span class="sig-paren">)</span><br /> <em><span class="pre">public</span></em><br /> <em><span class="pre">view</span></em><br /> <span class="pre">override</span><br /> <em><span class="pre">returns</span> </em><span class="sig-paren">(</span><em class="sig-param"><span class="pre">uint256</span></em><span class="sig-paren">)</span><br /></dt>
+<dd><p>Returns the minimum Proposition Power needed to create a proposition.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>governance</strong> – Governance Contract</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return</dt>
+<dd class="field-even"><p>minimum Proposition Power needed</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="sol function">
+<dt class="sig sig-object sol">
+<em><span class="pre">function</span> </em><span class="sig-name descname"><span class="pre">isProposalPassed</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">IGovernance</span> <span class="pre">governance</span></em>, <em class="sig-param"><span class="pre">uint256</span> <span class="pre">proposalId</span></em><span class="sig-paren">)</span><br /> <em><span class="pre">external</span></em><br /> <em><span class="pre">view</span></em><br /> <span class="pre">override</span><br /> <em><span class="pre">returns</span> </em><span class="sig-paren">(</span><em class="sig-param"><span class="pre">bool</span></em><span class="sig-paren">)</span><br /></dt>
+<dd><p>Returns whether a proposal passed or not</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>governance</strong> – Governance Contract</p></li>
+<li><p><strong>proposalId</strong> – Id of the proposal to set</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return</dt>
+<dd class="field-even"><p>true if proposal passed</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="sol function">
+<dt class="sig sig-object sol">
+<em><span class="pre">function</span> </em><span class="sig-name descname"><span class="pre">getMinimumVotingPowerNeeded</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">uint256</span> <span class="pre">votingSupply</span></em><span class="sig-paren">)</span><br /> <em><span class="pre">public</span></em><br /> <em><span class="pre">view</span></em><br /> <span class="pre">override</span><br /> <em><span class="pre">returns</span> </em><span class="sig-paren">(</span><em class="sig-param"><span class="pre">uint256</span></em><span class="sig-paren">)</span><br /></dt>
+<dd><p>Calculates the minimum amount of Voting Power needed for a proposal to Pass</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>votingSupply</strong> – Total number of oustanding voting tokens</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return</dt>
+<dd class="field-even"><p>voting power needed for a proposal to pass</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="sol function">
+<dt class="sig sig-object sol">
+<em><span class="pre">function</span> </em><span class="sig-name descname"><span class="pre">isQuorumValid</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">IGovernance</span> <span class="pre">governance</span></em>, <em class="sig-param"><span class="pre">uint256</span> <span class="pre">proposalId</span></em><span class="sig-paren">)</span><br /> <em><span class="pre">public</span></em><br /> <em><span class="pre">view</span></em><br /> <span class="pre">override</span><br /> <em><span class="pre">returns</span> </em><span class="sig-paren">(</span><em class="sig-param"><span class="pre">bool</span></em><span class="sig-paren">)</span><br /></dt>
+<dd><p>Check whether a proposal has reached quorum, has enough FOR-voting-power</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>governance</strong> – Governance Contract</p></li>
+<li><p><strong>proposalId</strong> – Id of the proposal to verify</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return</dt>
+<dd class="field-even"><p>voting power needed for a proposal to pass</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="sol function">
+<dt class="sig sig-object sol">
+<em><span class="pre">function</span> </em><span class="sig-name descname"><span class="pre">isVoteDifferentialValid</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">IGovernance</span> <span class="pre">governance</span></em>, <em class="sig-param"><span class="pre">uint256</span> <span class="pre">proposalId</span></em><span class="sig-paren">)</span><br /> <em><span class="pre">public</span></em><br /> <em><span class="pre">view</span></em><br /> <span class="pre">override</span><br /> <em><span class="pre">returns</span> </em><span class="sig-paren">(</span><em class="sig-param"><span class="pre">bool</span></em><span class="sig-paren">)</span><br /></dt>
+<dd><p>Check whether a proposal has enough extra FOR-votes than AGAINST-votes
+FOR VOTES % - AGAINST VOTES % &gt; VOTE_DIFFERENTIAL % * voting supply</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>governance</strong> – Governance Contract</p></li>
+<li><p><strong>proposalId</strong> – Id of the proposal to verify</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return</dt>
+<dd class="field-even"><p>true if enough For-Votes</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="sol interface">
+<dt class="sig sig-object sol">
+<em><span class="pre">interface</span> </em><span class="sig-name descname"><span class="pre">IProposalValidator</span></span></dt>
+<dd><dl class="sol function">
+<dt class="sig sig-object sol">
+<em><span class="pre">function</span> </em><span class="sig-name descname"><span class="pre">propositionThreshold</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><br /> <em><span class="pre">external</span></em><br /> <em><span class="pre">view</span></em><br /> <em><span class="pre">returns</span> </em><span class="sig-paren">(</span><em class="sig-param"><span class="pre">uint256</span></em><span class="sig-paren">)</span><br /></dt>
+<dd><p>Get proposition threshold constant value</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return</dt>
+<dd class="field-odd"><p>the proposition threshold value (100 &lt;=&gt; 1%)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="sol function">
+<dt class="sig sig-object sol">
+<em><span class="pre">function</span> </em><span class="sig-name descname"><span class="pre">votingDuration</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><br /> <em><span class="pre">external</span></em><br /> <em><span class="pre">view</span></em><br /> <em><span class="pre">returns</span> </em><span class="sig-paren">(</span><em class="sig-param"><span class="pre">uint256</span></em><span class="sig-paren">)</span><br /></dt>
+<dd><p>Get voting duration constant value</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return</dt>
+<dd class="field-odd"><p>the voting duration value in seconds</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="sol function">
+<dt class="sig sig-object sol">
+<em><span class="pre">function</span> </em><span class="sig-name descname"><span class="pre">voteDifferential</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><br /> <em><span class="pre">external</span></em><br /> <em><span class="pre">view</span></em><br /> <em><span class="pre">returns</span> </em><span class="sig-paren">(</span><em class="sig-param"><span class="pre">uint256</span></em><span class="sig-paren">)</span><br /></dt>
+<dd><p>Get the vote differential threshold constant value
+to compare with % of for votes/total supply - % of against votes/total supply</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return</dt>
+<dd class="field-odd"><p>the vote differential threshold value (100 &lt;=&gt; 1%)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="sol function">
+<dt class="sig sig-object sol">
+<em><span class="pre">function</span> </em><span class="sig-name descname"><span class="pre">minimumQuorum</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><br /> <em><span class="pre">external</span></em><br /> <em><span class="pre">view</span></em><br /> <em><span class="pre">returns</span> </em><span class="sig-paren">(</span><em class="sig-param"><span class="pre">uint256</span></em><span class="sig-paren">)</span><br /></dt>
+<dd><p>Get quorum threshold constant value
+to compare with % of for votes/total supply</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return</dt>
+<dd class="field-odd"><p>the quorum threshold value (100 &lt;=&gt; 1%)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="sol function">
+<dt class="sig sig-object sol">
+<em><span class="pre">function</span> </em><span class="sig-name descname"><span class="pre">ONE_HUNDRED_WITH_PRECISION</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><br /> <em><span class="pre">external</span></em><br /> <em><span class="pre">view</span></em><br /> <em><span class="pre">returns</span> </em><span class="sig-paren">(</span><em class="sig-param"><span class="pre">uint256</span></em><span class="sig-paren">)</span><br /></dt>
+<dd><p>precision helper: 100% = 10000</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return</dt>
+<dd class="field-odd"><p>one hundred percents with chosen precision</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="governancestrategy">
+<h2>GovernanceStrategy<a class="headerlink" href="#governancestrategy" title="Permalink to this headline"></a></h2>
+<dl class="sol contract">
+<dt class="sig sig-object sol">
+<em><span class="pre">contract</span> </em><span class="sig-name descname"><span class="pre">GovernanceStrategy</span></span> <span class="pre">is</span> <span class="pre">IGovernanceStrategy</span></dt>
+<dd><p>Smart contract containing logic to measure users’ relative power to propose and vote.
+User Power = User Power from Lotto Token + User Power from Game Lotto Token.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Title</dt>
+<dd class="field-odd"><p>Governance Strategy contract</p>
+</dd>
+</dl>
+<dl class="sol statevar">
+<dt class="sig sig-object sol">
+<span class="pre">address</span> <em><span class="pre">public</span> </em><span class="sig-name descname"><span class="pre">lottoAddress</span></span></dt>
+<dd></dd></dl>
+
+<dl class="sol statevar">
+<dt class="sig sig-object sol">
+<span class="pre">address</span> <em><span class="pre">public</span> </em><span class="sig-name descname"><span class="pre">gameLottoAddress</span></span></dt>
+<dd></dd></dl>
+
+<dl class="sol constructor">
+<dt class="sig sig-object sol">
+<span class="sig-name descname"><span class="pre">constructor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">address</span> <span class="pre">lotto</span></em>, <em class="sig-param"><span class="pre">address</span> <span class="pre">gLotto</span></em><span class="sig-paren">)</span><br /></dt>
+<dd><p>Constructor, register tokens used for Power.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>lotto</strong> – The address of the Lotto Token contract.</p></li>
+<li><p><strong>gLotto</strong> – The address of the gLotto Token Contract</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="sol function">
+<dt class="sig sig-object sol">
+<em><span class="pre">function</span> </em><span class="sig-name descname"><span class="pre">getTotalVotingSupply</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><br /> <em><span class="pre">public</span></em><br /> <em><span class="pre">view</span></em><br /> <span class="pre">override</span><br /> <em><span class="pre">returns</span> </em><span class="sig-paren">(</span><em class="sig-param"><span class="pre">uint256</span></em><span class="sig-paren">)</span><br /></dt>
+<dd><p>Returns the total supply of Proposition Tokens Available for Governance
+Voting supply will be equal Lotto supply. Cause the supply of Game lotto will be equal
+to the locked in the staking contract lotto tokens</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return</dt>
+<dd class="field-odd"><p>total supply</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="sol function">
+<dt class="sig sig-object sol">
+<em><span class="pre">function</span> </em><span class="sig-name descname"><span class="pre">getVotingPower</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">address</span> <span class="pre">user</span></em><span class="sig-paren">)</span><br /> <em><span class="pre">public</span></em><br /> <em><span class="pre">view</span></em><br /> <span class="pre">override</span><br /> <em><span class="pre">returns</span> </em><span class="sig-paren">(</span><em class="sig-param"><span class="pre">uint256</span></em><span class="sig-paren">)</span><br /></dt>
+<dd><p>Returns the Vote Power of a user.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>user</strong> – Address of the user.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return</dt>
+<dd class="field-even"><p>Vote number</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="index.html" class="btn btn-neutral float-left" title="Lotto Finance" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, Applicature.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

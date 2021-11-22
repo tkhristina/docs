@@ -1,0 +1,9 @@
+Lotto Finance
+==============
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Contents:
+
+   governance
+

@@ -1,0 +1,59 @@
+*********************
+Governance contracts
+*********************
+
+The documentation that describe contract core of governance mechanisme. 
+
+
+
+ .. image:: images/inherit.jpg
+     :width: 1200
+     :alt: Governance inheritance graph
+
+Governance
+===========
+
+.. autosolcontract:: Governance
+        :noindex:
+        :members:
+
+
+.. autosolinterface:: IGovernance
+        :noindex:
+        :members: ProposalCreated, ProposalCanceled, ProposalQueued, ProposalExecuted, VoteEmitted, GovernanceStrategyChanged, VotingDelayChanged, ExecutorAuthorized, ExecutorUnauthorized
+        
+
+Executor
+=========
+
+.. autosolcontract:: Executor
+        :noindex:
+        :members:
+        :exclude-members: executionPeriod, minimumDelay, maximumDelay
+
+.. autosolinterface:: IExecutor
+        :noindex:
+        :members:
+        :exclude-members: getAdmin, getPendingAdmin, getDelay, isActionQueued, isProposalOverExecutionPeriod, queueTransaction, executeTransaction, cancelTransaction
+
+ProposalValidator
+==================
+
+.. autosolcontract:: ProposalValidator
+        :noindex:
+        :members:
+
+.. autosolinterface:: IProposalValidator
+        :noindex:
+        :members: propositionThreshold, votingDuration, voteDifferential, minimumQuorum, ONE_HUNDRED_WITH_PRECISION
+        
+
+GovernanceStrategy
+==================
+
+.. autosolcontract:: GovernanceStrategy
+        :noindex:
+        :members:
+
+
+
